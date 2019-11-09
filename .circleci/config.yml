@@ -293,6 +293,9 @@ jobs:
       - run:
           <<: *defaults_environment
       - run:
+          name: check envs
+          command: echo "$DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG -t $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$RELEASE_TAG"
+      - run:
           <<: *defaults_build_docker_build
       - run:
           name: save docker image to workspace

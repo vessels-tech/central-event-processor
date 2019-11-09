@@ -147,6 +147,9 @@ defaults_test_env: &defaults_test_env
     - TAG_EXP_SNAPSHOT: 'v[0-9]+(\.[0-9]+)*\-SNAPSHOT'
     - TAG: v1.0
     - TEST_TAG: v1.0
+    - DOCKER_ORG: docker.io
+    - CIRCLE_TAG: v1.0
+    - RELEASE_TAG: v1.0
 
 defaults_working_directory: &defaults_working_directory
   working_directory: /home/circleci/project

@@ -43,7 +43,8 @@ defaults_awsCliDependencies: &defaults_awsCliDependencies |
 defaults_build_docker_build: &defaults_build_docker_build
   name: Build Docker image
   command: |
-    docker build -t $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG -t $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$RELEASE_TAG .
+    # docker build -t $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG -t $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$RELEASE_TAG .
+    docker build -t $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TEST_TAG -t $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TEST_TAG .
 
 defaults_build_docker_login: &defaults_build_docker_login
   name: Login to Docker Hub
@@ -146,9 +147,9 @@ defaults_test_env: &defaults_test_env
     - TAG_EXP: 'v[0-9]+(\.[0-9]+)*'
     - TAG_EXP_SNAPSHOT: 'v[0-9]+(\.[0-9]+)*\-SNAPSHOT'
     - TAG: v1.0
-    - TEST_TAG: v1.0
+    - CIRCLE_TEST_TAG: v1.0
     - DOCKER_ORG: docker.io
-    - CIRCLE_TAG: v1.0
+    # - CIRCLE_TAG: v1.0
     - RELEASE_TAG: v1.0
 
 defaults_working_directory: &defaults_working_directory
@@ -297,12 +298,14 @@ jobs:
           <<: *defaults_environment
       - run:
           name: check envs
-          command: echo "$DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG -t $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$RELEASE_TAG"
+          # command: echo "$DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG -t $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$RELEASE_TAG"
+          command: echo "$DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TEST_TAG -t $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TEST_TAG"
       - run:
           <<: *defaults_build_docker_build
       - run:
           name: save docker image to workspace
-          command: docker save -o /tmp/docker-image.tar $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG
+          # command: docker save -o /tmp/docker-image.tar $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG
+          command: docker save -o /tmp/docker-image.tar $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TEST_TAG
       - persist_to_workspace:
           root: /tmp
           paths:

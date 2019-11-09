@@ -527,6 +527,8 @@ workflows:
             tags:
               only: /v[0-9]+(\.[0-9]+)*/
             branches:
+              # TODO: Remove after testing
+              only: /feature\/1003.*/
               ignore:
                 - /.*/
       - license-scan:
@@ -537,6 +539,8 @@ workflows:
             tags:
               only: /v[0-9]+(\.[0-9]+)*/
             branches:
+              # TODO: Remove after testing
+              only: /feature\/1003.*/
               ignore:
                 - /.*/
       - image-scan:
@@ -547,6 +551,8 @@ workflows:
             tags:
               only: /v[0-9]+(\.[0-9]+)*/
             branches:
+              # TODO: Remove after testing
+              only: /feature\/1003.*/
               ignore:
                 - /.*/
       - publish:

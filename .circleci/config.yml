@@ -43,6 +43,7 @@ defaults_awsCliDependencies: &defaults_awsCliDependencies |
 defaults_build_docker_build: &defaults_build_docker_build
   name: Build Docker image
   command: |
+    # TODO: replace
     # docker build -t $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG -t $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$RELEASE_TAG .
     docker build -t $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TEST_TAG -t $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TEST_TAG .
 
@@ -146,6 +147,7 @@ defaults_test_env: &defaults_test_env
   environment:
     - TAG_EXP: 'v[0-9]+(\.[0-9]+)*'
     - TAG_EXP_SNAPSHOT: 'v[0-9]+(\.[0-9]+)*\-SNAPSHOT'
+    # TODO: remove these
     - TAG: v1.0
     - CIRCLE_TEST_TAG: v1.0
     - DOCKER_ORG: docker.io
@@ -156,7 +158,7 @@ defaults_working_directory: &defaults_working_directory
   working_directory: /home/circleci/project
 
 ##
-# executors
+# Executors
 #
 # CircleCI Executors
 ##
@@ -176,9 +178,9 @@ executors:
       - image: hypnoglow/kubernetes-helm
 
 ##
-# jobs
+# Jobs
 #
-# a map of CircleCI jobs
+# A map of CircleCI jobs
 ##
 jobs:
   setup:
@@ -270,24 +272,24 @@ jobs:
           path: /tmp/license-scanner/results
           prefix: licenses
 
-  build-snapshot:
-    executor: default-machine
-    steps:
-      - checkout
-      - run:
-          <<: *defaults_environment
-      - run:
-          name: setup environment vars for SNAPSHOT release
-          command: |
-            echo 'export RELEASE_TAG=$RELEASE_TAG_SNAPSHOT' >> $BASH_ENV
-      - run:
-          <<: *defaults_build_docker_login
-      - run:
-          <<: *defaults_build_docker_build
-      - run:
-          <<: *defaults_build_docker_publish
-      - run:
-          <<: *defaults_slack_announcement
+  # build-snapshot:
+  #   executor: default-machine
+  #   steps:
+  #     - checkout
+  #     - run:
+  #         <<: *defaults_environment
+  #     - run:
+  #         name: setup environment vars for SNAPSHOT release
+  #         command: |
+  #           echo 'export RELEASE_TAG=$RELEASE_TAG_SNAPSHOT' >> $BASH_ENV
+  #     - run:
+  #         <<: *defaults_build_docker_login
+  #     - run:
+  #         <<: *defaults_build_docker_build
+  #     - run:
+  #         <<: *defaults_build_docker_publish
+  #     - run:
+  #         <<: *defaults_slack_announcement
 
   build:
     executor: default-machine
@@ -298,12 +300,14 @@ jobs:
           <<: *defaults_environment
       - run:
           name: check envs
+          # TODO: change back
           # command: echo "$DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG -t $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$RELEASE_TAG"
           command: echo "$DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TEST_TAG -t $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TEST_TAG"
       - run:
           <<: *defaults_build_docker_build
       - run:
           name: save docker image to workspace
+          # TODO: change back
           # command: docker save -o /tmp/docker-image.tar $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG
           command: docker save -o /tmp/docker-image.tar $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TEST_TAG
       - persist_to_workspace:
@@ -324,6 +328,7 @@ jobs:
           <<: *defaults_license_scanner
       - run:
           name: Run the license-scanner
+          # TODO: change back
           # command: cd /tmp/license-scanner && mode=docker dockerImage=$DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG make run
           command: cd /tmp/license-scanner && mode=docker dockerImage=$DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TEST_TAG make run
       - store_artifacts:
@@ -396,46 +401,43 @@ jobs:
             docker tag $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$RELEASE_TAG
       - run:
           <<: *defaults_build_docker_publish
-      # TODO: can we remove this?
-      # - run:
-          # <<: *defaults_build_docker_publish_release
       - run:
           <<: *defaults_slack_announcement
         
-  deploy-snapshot:
-    executor: helm-kube
-    steps:
-      - run:
-          <<: *defaults_environment
-      - run:
-          name: Install AWS CLI dependencies
-          command: *defaults_awsCliDependencies
-      - run:
-          name: setup environment vars for SNAPSHOT release
-          command: |
-            echo 'export HELM_VALUE_FILENAME=$K8_HELM_VALUE_FILENAME_SNAPSHOT' >> $BASH_ENV
-            echo 'export K8_CLUSTER_SERVER=$K8_CLUSTER_SERVER_SNAPSHOT' >> $BASH_ENV
-            echo 'export K8_RELEASE_NAME=$K8_RELEASE_NAME_SNAPSHOT' >> $BASH_ENV
-            echo 'export K8_NAMESPACE=$K8_NAMESPACE_SNAPSHOT' >> $BASH_ENV
-            echo 'export K8_USER_NAME=$K8_USER_NAME_SNAPSHOT' >> $BASH_ENV
-            echo 'export K8_USER_TOKEN=$K8_USER_TOKEN_SNAPSHOT' >> $BASH_ENV
-            echo 'export K8_HELM_CHART_NAME=$K8_HELM_CHART_NAME_SNAPSHOT' >> $BASH_ENV
-            echo 'export K8_HELM_CHART_VERSION=$K8_HELM_CHART_VERSION_SNAPSHOT' >> $BASH_ENV
-            echo 'export HELM_VALUE_SET_VALUES="--set central.centralhub.centralledger.containers.api.image.repository=$DOCKER_ORG/$CIRCLE_PROJECT_REPONAME --set central.centralhub.centralledger.containers.api.image.tag=$CIRCLE_TAG --set central.centralhub.centralledger.containers.admin.image.repository=$DOCKER_ORG/$CIRCLE_PROJECT_REPONAME --set central.centralhub.centralledger.containers.admin.image.tag=$CIRCLE_TAG"' >> $BASH_ENV
-      - run:
-          <<: *defaults_deploy_prequisites
-      - run:
-          <<: *defaults_deploy_config_kubernetes_cluster
-      - run:
-          <<: *defaults_deploy_config_kubernetes_credentials
-      - run:
-          <<: *defaults_deploy_config_kubernetes_context
-      - run:
-          <<: *defaults_deploy_set_kubernetes_context
-      - run:
-          <<: *defaults_deploy_configure_helm
-      - run:
-          <<: *defaults_deploy_install_or_upgrade_helm_chart
+  # deploy-snapshot:
+  #   executor: helm-kube
+  #   steps:
+  #     - run:
+  #         <<: *defaults_environment
+  #     - run:
+  #         name: Install AWS CLI dependencies
+  #         command: *defaults_awsCliDependencies
+  #     - run:
+  #         name: setup environment vars for SNAPSHOT release
+  #         command: |
+  #           echo 'export HELM_VALUE_FILENAME=$K8_HELM_VALUE_FILENAME_SNAPSHOT' >> $BASH_ENV
+  #           echo 'export K8_CLUSTER_SERVER=$K8_CLUSTER_SERVER_SNAPSHOT' >> $BASH_ENV
+  #           echo 'export K8_RELEASE_NAME=$K8_RELEASE_NAME_SNAPSHOT' >> $BASH_ENV
+  #           echo 'export K8_NAMESPACE=$K8_NAMESPACE_SNAPSHOT' >> $BASH_ENV
+  #           echo 'export K8_USER_NAME=$K8_USER_NAME_SNAPSHOT' >> $BASH_ENV
+  #           echo 'export K8_USER_TOKEN=$K8_USER_TOKEN_SNAPSHOT' >> $BASH_ENV
+  #           echo 'export K8_HELM_CHART_NAME=$K8_HELM_CHART_NAME_SNAPSHOT' >> $BASH_ENV
+  #           echo 'export K8_HELM_CHART_VERSION=$K8_HELM_CHART_VERSION_SNAPSHOT' >> $BASH_ENV
+  #           echo 'export HELM_VALUE_SET_VALUES="--set central.centralhub.centralledger.containers.api.image.repository=$DOCKER_ORG/$CIRCLE_PROJECT_REPONAME --set central.centralhub.centralledger.containers.api.image.tag=$CIRCLE_TAG --set central.centralhub.centralledger.containers.admin.image.repository=$DOCKER_ORG/$CIRCLE_PROJECT_REPONAME --set central.centralhub.centralledger.containers.admin.image.tag=$CIRCLE_TAG"' >> $BASH_ENV
+  #     - run:
+  #         <<: *defaults_deploy_prequisites
+  #     - run:
+  #         <<: *defaults_deploy_config_kubernetes_cluster
+  #     - run:
+  #         <<: *defaults_deploy_config_kubernetes_credentials
+  #     - run:
+  #         <<: *defaults_deploy_config_kubernetes_context
+  #     - run:
+  #         <<: *defaults_deploy_set_kubernetes_context
+  #     - run:
+  #         <<: *defaults_deploy_configure_helm
+  #     - run:
+  #         <<: *defaults_deploy_install_or_upgrade_helm_chart
 
   deploy:
     executor: helm-kube
@@ -445,6 +447,7 @@ jobs:
       - run:
           name: Install AWS CLI dependencies
           command: *defaults_awsCliDependencies
+      # TODO: set these up based on snapshot or not
       - run:
           name: setup environment vars for release
           command: |
@@ -523,19 +526,19 @@ workflows:
               ignore:
                 - /feature*/
                 - /bugfix*/
-      - build-snapshot:
-          context: org-global
-          requires:
-            - setup
-            - test-unit
-            - vulnerability-check
-            - audit-licenses
-          filters:
-            tags:
-              only: /v[0-9]+(\.[0-9]+)*\-snapshot/
-            branches:
-              ignore:
-                - /.*/
+      # - build-snapshot:
+      #     context: org-global
+      #     requires:
+      #       - setup
+      #       - test-unit
+      #       - vulnerability-check
+      #       - audit-licenses
+      #     filters:
+      #       tags:
+      #         only: /v[0-9]+(\.[0-9]+)*\-snapshot/
+      #       branches:
+      #         ignore:
+      #           - /.*/
       - build:
           context: org-global
           requires:
@@ -545,7 +548,8 @@ workflows:
             - audit-licenses
           filters:
             tags:
-              only: /v[0-9]+(\.[0-9]+)*/
+              # only: /v[0-9]+(\.[0-9]+)*/
+              only: /v[0-9]+(\.[0-9]+)*(\-snapshot)?/
             branches:
               # TODO: Remove after testing
               only: /feature\/1003.*/
@@ -557,7 +561,8 @@ workflows:
             - build
           filters:
             tags:
-              only: /v[0-9]+(\.[0-9]+)*/
+              # only: /v[0-9]+(\.[0-9]+)*/
+              only: /v[0-9]+(\.[0-9]+)*(\-snapshot)?/
             branches:
               # TODO: Remove after testing
               only: /feature\/1003.*/
@@ -569,7 +574,8 @@ workflows:
             - build
           filters:
             tags:
-              only: /v[0-9]+(\.[0-9]+)*/
+              # only: /v[0-9]+(\.[0-9]+)*/
+              only: /v[0-9]+(\.[0-9]+)*(\-snapshot)?/
             branches:
               # TODO: Remove after testing
               only: /feature\/1003.*/
@@ -582,27 +588,29 @@ workflows:
             - image-scan
           filters:
             tags:
-              only: /v[0-9]+(\.[0-9]+)*/
+              # only: /v[0-9]+(\.[0-9]+)*/
+              only: /v[0-9]+(\.[0-9]+)*(\-snapshot)?/
             branches:
               ignore:
                 - /.*/
-      - deploy-snapshot:
-          context: org-global
-          requires:
-            - build-snapshot
-          filters:
-            tags:
-              only: /v[0-9]+(\.[0-9]+)*\-snapshot/
-            branches:
-              ignore:
-                - /.*/
+      # - deploy-snapshot:
+      #     context: org-global
+      #     requires:
+      #       - build-snapshot
+      #     filters:
+      #       tags:
+      #         only: /v[0-9]+(\.[0-9]+)*\-snapshot/
+      #       branches:
+      #         ignore:
+      #           - /.*/
       - deploy:
           context: org-global
           requires:
             - build
           filters:
             tags:
-              only: /v[0-9]+(\.[0-9]+)*/
+              # only: /v[0-9]+(\.[0-9]+)*/
+              only: /v[0-9]+(\.[0-9]+)*(\-snapshot)?/
             branches:
               ignore:
                 - /.*/

@@ -5,7 +5,7 @@ set -o nounset
 # TAG=v1.2.3-snapshot
 # TAG=v1.1.1
 
-if [[ ${TAG} =~ v[0-9]+(\.[0-9]+)*(\-snapshot) ]]; then
+if [[ ${CIRCLE_TAG} =~ v[0-9]+(\.[0-9]+)*(\-snapshot) ]]; then
   echo "Setting env vars for 'snapshot'"
 
   echo 'export HELM_VALUE_FILENAME=$K8_HELM_VALUE_FILENAME_SNAPSHOT' >> $BASH_ENV
@@ -21,7 +21,7 @@ if [[ ${TAG} =~ v[0-9]+(\.[0-9]+)*(\-snapshot) ]]; then
   exit 0
 fi
 
-if [[ ${TAG} =~ v[0-9]+(\.[0-9]+)* ]]; then
+if [[ ${CIRCLE_TAG} =~ v[0-9]+(\.[0-9]+)* ]]; then
   echo "Setting env vars for 'production'"
 
   echo 'export HELM_VALUE_FILENAME=$K8_HELM_VALUE_FILENAME_PROD' >> $BASH_ENV

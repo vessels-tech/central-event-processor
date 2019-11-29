@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
+
+set -o nounset
+
 # TAG=v1.2.3-snapshot
-TAG=v1.1.1
+# TAG=v1.1.1
 
 if [[ ${TAG} =~ v[0-9]+(\.[0-9]+)*(\-snapshot) ]]; then
   echo "Setting env vars for 'snapshot'"

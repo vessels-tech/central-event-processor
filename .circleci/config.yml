@@ -67,7 +67,7 @@ defaults_deploy_config_kubernetes_cluster: &defaults_deploy_config_kubernetes_cl
     kubectl config set-cluster $K8_CLUSTER_NAME --server=$K8_CLUSTER_SERVER --insecure-skip-tls-verify=true
 
 defaults_deploy_config_kubernetes_context: &defaults_deploy_config_kubernetes_context
-  name: Confi gure Kubernetes context
+  name: Configure Kubernetes context
   command: |
     echo "Configure Kubernetes context ${K8_CLUSTER_NAME}"
     kubectl config set-context $K8_CLUSTER_NAME --cluster=$K8_CLUSTER_NAME --user=$K8_USER_NAME --namespace=$K8_NAMESPACE
@@ -442,6 +442,7 @@ jobs:
   deploy:
     executor: helm-kube
     steps:
+      - checkout
       - run:
           <<: *defaults_environment
       - run:

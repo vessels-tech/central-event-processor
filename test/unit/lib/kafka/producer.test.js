@@ -37,6 +37,7 @@ const KafkaProducer = require('@mojaloop/central-services-stream').Kafka.Produce
 const Producer = require(`${src}/lib/kafka/producer`)
 const P = require('bluebird')
 const Uuid = require('uuid4')
+const FSPIOPError = require('@mojaloop/central-services-error-handling').Factory.FSPIOPError
 
 const transfer = {
   transferId: 'b51ec534-ee48-4575-b6a9-ead2955b8999',
@@ -96,7 +97,7 @@ const topicConf = {
 
 Test('Producer', producerTest => {
   let sandbox
-  let config = {}
+  const config = {}
 
   producerTest.test('produceMessage should', produceMessageTest => {
     produceMessageTest.beforeEach(t => {
@@ -137,8 +138,8 @@ Test('Producer', producerTest => {
       try {
         topicConf.topicName = 'someTopic1'
         await Producer.produceMessage(messageProtocol, topicConf, config)
-        topicConf.topicName = 'someTopic2'
-        await Producer.produceMessage(messageProtocol, topicConf, config)
+        const clonedTopicConf = { ...topicConf, topicName: 'someTopic2' }
+        await Producer.produceMessage(messageProtocol, clonedTopicConf, config)
         await Producer.disconnect()
         test.pass('Disconnected all topics successfully')
         test.end()
@@ -177,7 +178,7 @@ Test('Producer', producerTest => {
         test.ok(Producer.getProducer('undefined'))
         test.fail('Error not thrown!')
       } catch (e) {
-        test.ok(e.toString() === 'Error: No producer found for topic undefined')
+        test.ok(e.message === 'No producer found for topic undefined')
       }
       test.end()
     })
@@ -257,8 +258,8 @@ Test('Producer', producerTest => {
         test.fail()
         test.end()
       } catch (e) {
-        test.ok(e instanceof Error)
-        test.ok(e.toString() === `Error: The following Producers could not be disconnected: [{"topic":"${topicNameFailure}","error":"No producer found for topic ${topicNameFailure}"}]`)
+        test.ok(e instanceof FSPIOPError)
+        test.ok(e.message === `The following Producers could not be disconnected: [{"topic":"${topicNameFailure}","error":"No producer found for topic ${topicNameFailure}"}]`)
         test.end()
       }
       getProducerStub.restore()
@@ -270,7 +271,7 @@ Test('Producer', producerTest => {
         await Producer.produceMessage({}, { topicName: topicName }, {})
         await Producer.disconnect('undefined')
       } catch (e) {
-        test.ok(e instanceof Error)
+        test.ok(e instanceof FSPIOPError)
         test.end()
       }
     })

@@ -22,18 +22,29 @@
  * Gates Foundation
  - Name Surname <name.surname@gatesfoundation.com>
 
- * ModusBox
- - Valentin Genev <valentin.genev@modusbox.com>
- - Deon Botha <deon.botha@modusbox.com>
+ * Crosslake
+ - Lewis Daly <lewisd@crosslaketech.com>
 
  --------------
  ******/
 'use strict'
 
-const thirdparty = require('./thirdparty')
+const mongoose = require('mongoose')
+const config = require('../lib/config')
+
+const transferSubscriptionSchema = new mongoose.Schema({
+  // The id of the transfer to watch for
+  transferId: { 
+    type: mongoose.Schema.Types.ObjectId,
+  },
+  // The participantId (dfspId) to inform when we observe the above transferId
+  participantId: {
+    type: mongoose.Schema.Types.String,
+  }
+})
+
+const transferSubscriptionModel = mongoose.model(config.mongo.transferSubscriptionCollection, transferSubscriptionSchema)
 
 module.exports = {
-  ...thirdparty,
-  ndcAdjustmentObservable: require('./ndcAdjustment').ndcAdjustmentObservable,
-  ndcBreachObservable: require('./ndcBreach').ndcBreachObservable
+  transferSubscriptionModel
 }

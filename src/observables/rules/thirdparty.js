@@ -22,10 +22,8 @@
  * Gates Foundation
  - Name Surname <name.surname@gatesfoundation.com>
 
- * ModusBox
- - Georgi Georgiev <georgi.georgiev@modusbox.com>
- - Valentin Genev <valentin.genev@modusbox.com>
- - Deon Botha <deon.botha@modusbox.com>
+ * Crosslake
+ - Lewis Daly <lewisd@crosslaketech.com>
 
  --------------
  ******/
@@ -35,19 +33,59 @@ const RuleEngine = require('json-rules-engine')
 const Rx = require('rxjs')
 
 /**
- * @function thirdpartyRequestObservable
+ * @function thirdpartySubscribeObservable
  * @description An observable which handles incoming messages of type 
- *   'commit', looks up interested parties, and emits thirdpartyTransfer
- *   events
- * @param {*} Object
- * @param {any} Object.message  - The message object
+ *   'subscription', and saves susbcriptions to 
+ * @param {*} message - The message object from Kafka
  * @returns {function} Observable - A Rx.Observable
  */
-export function thirdpartyRequestObservable({message}) {
+function thirdpartySubscribeObservable(message) {
   const handler = async observer => {
     console.log('Handler is being called with message', message)
+
+    //TODO: emit a thirdparty-request-message
   }
 
   return Rx.Observable.create(handler)
 }
 
+/**
+ * @function thirdpartyUnsubscribeObservable
+ * @description An observable which unsubscribes from future messages
+ * @param {*} message - The message object from Kafka
+ * @returns {function} Observable - A Rx.Observable
+ */
+function thirdpartyUnsubscribeObservable(message) {
+  const handler = async observer => {
+    console.log('Handler is being called with message', message)
+
+    //TODO: emit a thirdparty-request-message
+  }
+
+  return Rx.Observable.create(handler)
+}
+
+/**
+ * @function thirdpartyNotificationObservable
+ * @description An observable which handles incoming messages of type 
+ *   'commit', looks up interested parties, and emits thirdpartyTransfer
+ *   events
+ * @param {*} message - The message object from Kafka
+ * @returns {function} Observable - A Rx.Observable
+ */
+function thirdpartyNotificationObservable(message) {
+  const handler = async observer => {
+    console.log('Handler is being called with message', message)
+
+    //TODO: emit a thirdparty-request-message
+
+  }
+
+  return Rx.Observable.create(handler)
+}
+
+
+
+module.exports = {
+  thirdpartyNotificationObservable
+}

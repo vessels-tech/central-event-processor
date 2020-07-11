@@ -28,6 +28,7 @@
     "ruleCollection": "Rule",
     "netDebitCapPositionCollection": "NDCPosition",
     "actionCollection": "Actions",
+    "transferSubscriptionCollection": "TransferSubscription",
     "eventCollection": "Events",
     "limitCollection": "Limits",
     "notificationEndpointCollection": "NotificationEndpoints"

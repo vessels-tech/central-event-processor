@@ -52,6 +52,7 @@ const packageJson = require('../package.json')
 
 const setup = async () => {
   await require('./lib/database').db()
+  // TODO: should this not pass in the topic name?
   await Consumer.registerNotificationHandler()
 
   const topicName = Utility.transformGeneralTopicName(Utility.ENUMS.NOTIFICATION, Utility.ENUMS.EVENT)
@@ -90,33 +91,6 @@ const setup = async () => {
       })
     )
 
-  // generalObservable.subscribe({
-  //   next: async ({ actionResult, message }) => {
-  //     if (!actionResult) {
-  //       Logger.info(`action unsuccessful. Publishing the message to topic ${topicName}`)
-  //       // TODO consider should we change the state and produce error message instead of republish?
-  //       await Utility.produceGeneralMessage(TransferEventType.NOTIFICATION, TransferEventAction.EVENT, message, Utility.ENUMS.STATE.SUCCESS)
-  //     }
-  //     Logger.info(actionResult)
-  //   },
-  //   error: err => Logger.info('Error occured: ', err),
-  //   completed: (value) => Logger.info('completed with value', value)
-  // })
-
-  /*
-    Thirdparty transfers Observer
-  */
-  //TODO: observable that listens to commits, and sends events to subscribes parties
-  const thirdpartyObservable = topicObservable.pipe(
-    filter(data => data.value.metadata.event.action === 'commit'),
-    flatMap(Observables.Rules.thirdpartyRequestObservable),
-    flatMap(Observables.actionObservable),
-    catchError(() => {
-      return Rx.onErrorResumeNext(generalObservable)
-    })
-  )
-
-
   /*
     Limit Adjustments Observer
   */
@@ -130,18 +104,6 @@ const setup = async () => {
         return Rx.onErrorResumeNext(limitAdjustmentObservable)
       })
     )
-
-  // limitAdjustmentObservable.subscribe({
-  //   next: async ({ actionResult, message }) => {
-  //     if (!actionResult) {
-  //       Logger.info(`action unsuccessful. Publishing the message to topic ${topicName}`)
-  //       await Utility.produceGeneralMessage(TransferEventType.NOTIFICATION, TransferEventAction.EVENT, message, Utility.ENUMS.STATE.SUCCESS)
-  //     }
-  //     Logger.info(actionResult)
-  //   },
-  //   error: err => Logger.info('Error occured: ', err),
-  //   completed: (value) => Logger.info('completed with value', value)
-  // })
 
   /*
     Settlement Position Change
@@ -158,26 +120,42 @@ const setup = async () => {
       })
     )
 
-  // settlementTransferPositionChangeObservable.subscribe({
-  //   // TODO: surely this subscribe dict can be generalized...
-  //   next: async ({ actionResult, message }) => {
-  //     if (!actionResult) {
-  //       Logger.info(`action unsuccessful. Publishing the message to topic ${topicName}`)
-  //       // TODO we should change the state and produce error message instead of republish?
-  //       await Utility.produceGeneralMessage(TransferEventType.NOTIFICATION, TransferEventAction.EVENT, message, Utility.ENUMS.STATE.SUCCESS)
-  //     }
-  //     Logger.info(actionResult)
-  //   },
-  //   error: err => Logger.info('Error occured: ', err),
-  //   completed: (value) => Logger.info('completed with value', value)
-  // })
+  /*
+    Thirdparty Subscription Observer
+   */
+  const thirdpartySubscriptionObservable = topicObservable.pipe(
+    filter(data => data.value.metadata.event.action === 'subscription'),
+    // TODO: filter by subscribed! events only
+    flatMap(Observables.Rules.thirdpartySubscribeObservable),
+    flatMap(Observables.actionObservable),
+    catchError(() => {
+      return Rx.onErrorResumeNext(generalObservable)
+    })
+  )
+
+  /*
+    Thirdparty Notification Observer
+   */
+  const thirdpartyNotificationObservable = topicObservable.pipe(
+    filter(data => data.value.metadata.event.action === 'commit'),
+    // TODO: filter by subscribed events only!
+    flatMap(Observables.Rules.thirdpartyNotificationObservable),
+    flatMap(Observables.actionObservable),
+    // on success, remove the subscription!
+    flatMap(Observables.Rules.thirdpartyUnsubscribeObservable),
+    catchError(() => {
+      return Rx.onErrorResumeNext(generalObservable)
+    })
+  )
 
   // Subscribe all observables
   const allObservables = [
-    generalObservable,
-    thirdpartyObservable,
-    limitAdjustmentObservable,
-    settlementTransferPositionChangeObservable
+    // TODO: renable these later
+    // generalObservable,
+    // limitAdjustmentObservable,
+    // settlementTransferPositionChangeObservable
+    thirdpartySubscriptionObservable,
+    thirdpartyNotificationObservable,
   ]
   allObservables.forEach(observable => observable.subscribe({
     // TODO: surely this subscribe dict can be generalized...

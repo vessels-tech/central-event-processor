@@ -35,7 +35,7 @@ const config = require('../lib/config')
 const transferSubscriptionSchema = new mongoose.Schema({
   // The id of the transfer to watch for
   transferId: { 
-    type: mongoose.Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.String,
   },
   // The participantId (dfspId) to inform when we observe the above transferId
   participantId: {

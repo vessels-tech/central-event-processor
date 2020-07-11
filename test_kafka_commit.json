@@ -1,65 +1,59 @@
 {
-  "from": "SYSTEM",
-  "to": "dfsp1",
-  "id": "694dd040-a315-4427-bcf0-e29229c4defe",
+  "from": "dfspa",
+  "to": "dfspb",
+  "id": "6ccfcfb9-1d58-46b8-b3f6-49a85c6c593f",
   "content": {
-    "header": {},
-    "payload": {
-      "from": "SYSTEM",
-      "to": "dfsp1",
-      "recepientDetails": {
-        "_id": "5bf5480aa305f9801a6d59db",
-        "name": "dfsp1",
-        "type": "NET_DEBIT_CAP_ADJUSTMENT",
-        "value": "dean.bothma@modusbox.com",
-        "action": "sendEmail",
-        "createdAt": "2018-11-21T11: 56: 58.919Z",
-        "updatedAt": "2018-11-21T14: 00: 38.993Z",
-        "__v": 0
-      },
-      "hubDetails": {
-        "_id": "5bf5480aa305f9801a6d59dd",
-        "name": "Hub",
-        "type": "NET_DEBIT_CAP_ADJUSTMENT",
-        "value": "dean.bothma@modusbox.com",
-        "action": "sendEmail",
-        "createdAt": "2018-11-21T11: 56: 58.950Z",
-        "updatedAt": "2018-11-21T14: 00: 39.077Z",
-        "__v": 0
-      },
-      "messageDetails": {
-        "dfsp": "dfsp1",
-        "limitType": "NET_DEBIT_CAP",
-        "value": 1000,
-        "currency": "USD",
-        "triggeredBy": "5bf5480ba305f9801a6d59e0",
-        "repetitionsAllowed": 3,
-        "fromEvent": "5bf5480ba305f9801a6d59e4",
-        "action": "sendEmail",
-        "notificationEndpointType": "NET_DEBIT_CAP_ADJUSTMENT",
-        "templateType": "adjustment",
-        "language": "en",
-        "messageSubject": "NET_DEBIT_CAP LIMIT ADJUSTMENT",
-        "notificationInterval": 3,
-        "resetPeriod": 60
-      }
-    }
+    "uriParams": {
+      "id": "6ccfcfb9-1d58-46b8-b3f6-49a85c6c593f"
+    },
+    "headers": {
+      "content-type": "application/vnd.interoperability.transfers+json;version=1.0",
+      "date": "2020-07-11T09:42:24.000Z",
+      "fspiop-source": "dfspa",
+      "fspiop-destination": "dfspb",
+      "authorization": "Bearer 74b241a2-4200-3938-8dfc-0e26ba21dc22",
+      "host": "ml-api-adapter:3000",
+      "content-length": "136",
+      "connection": "close"
+    },
+    "payload": "data:application/vnd.interoperability.transfers+json;version=1.0;base64,eyJjb21wbGV0ZWRUaW1lc3RhbXAiOiIyMDIwLTA3LTExVDA5OjQyOjI0LjYxNloiLCJ0cmFuc2ZlclN0YXRlIjoiQ09NTUlUVEVEIiwiZnVsZmlsbWVudCI6IlJ2OVB4UkMzUFJKRWlVUm9RaTZyMndHOEFCZDJzQWlIV1VSYTdJbTQyaDQifQ"
   },
   "type": "application/json",
   "metadata": {
+    "correlationId": "6ccfcfb9-1d58-46b8-b3f6-49a85c6c593f",
     "event": {
-      "id": "4276f87a-0a17-485f-acb8-f2d582a1f608",
-      "responseTo": "88d15b71-ae0d-4e31-a285-c3fdd5982180",
       "type": "notification",
-      "action": "subscription",
-      "createdAt": "2018-12-11T13: 36: 58.225Z",
+      "action": "commit",
+      "createdAt": "2020-07-11T09:42:24.622Z",
       "state": {
         "status": "success",
         "code": 0,
         "description": "action successful"
+      },
+      "id": "ebc5f527-b999-4261-8849-d7af6a5f17dd",
+      "responseTo": "9ec01f18-948c-4906-9754-13708f0b4fa9"
+    },
+    "trace": {
+      "startTimestamp": "2020-07-11T09:42:24.664Z",
+      "service": "cl_transfer_position",
+      "traceId": "8039176e635150bd1cabf4054c947e7f",
+      "spanId": "970c4f22a471a3aa",
+      "parentSpanId": "760e2ac050f6638b",
+      "tags": {
+        "tracestate": "acmevendor=eyJzcGFuSWQiOiI5NzBjNGYyMmE0NzFhM2FhIiwidGltZUFwaUZ1bGZpbCI6IjE1OTQ0NjA1NDQ2MjEifQ==",
+        "transactionType": "transfer",
+        "transactionAction": "fulfil",
+        "transactionId": "6ccfcfb9-1d58-46b8-b3f6-49a85c6c593f",
+        "source": "dfspa",
+        "destination": "dfspb"
+      },
+      "tracestates": {
+        "acmevendor": {
+          "spanId": "970c4f22a471a3aa",
+          "timeApiFulfil": "1594460544621"
+        }
       }
     },
-    "protocol.createdAt": 1544535418447
-  },
-  "pp": ""
+    "protocol.createdAt": 1594460544685
+  }
 }

@@ -72,8 +72,12 @@ const createMessageProtocol = (payload, action, state = '', pp = '') => {
 
 const dictionary = {
   produceToKafkaTopic: async ({ payload, action, eventType = TransferEventType.NOTIFICATION, eventAction = 'email-notifier' }) => {
+    console.log('produceToKafkaTopic WTF???')
     try {
-      await Utility.produceGeneralMessage(eventType, eventAction, createMessageProtocol(payload, action), Utility.ENUMS.STATE.SUCCESS)
+      const message = createMessageProtocol(payload, action);
+      console.log('createMessageProtocol result:', message)
+      // WTF??? Why so many levels of misdirection here?
+      await Utility.produceGeneralMessage(eventType, eventAction, message, Utility.ENUMS.STATE.SUCCESS)
     } catch (err) {
       throw ErrorHandler.Factory.reformatFSPIOPError(err)
     }

@@ -283,6 +283,7 @@ const createGeneralTopicConf = (functionality, action, partition = 0, opaqueKey 
  * @returns {object} - Returns a boolean: true if successful, or throws and error if failed
  */
 const produceGeneralMessage = async (functionality, action, message, state) => {
+  console.log('produceGeneralMessage WTF?')
   let functionalityMapped = functionality
   let actionMapped = action
   if (Enum.topicMap[functionality] && Enum.topicMap[functionality][action]) {

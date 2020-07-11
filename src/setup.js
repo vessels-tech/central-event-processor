@@ -67,6 +67,8 @@ const setup = async () => {
   const topicObservable = Rx.Observable.create((observer) => {
     // When kafka receives a message, push it into the topic observable
     consumer.on('message', async (data) => {
+      // console.log("message is", data.value.metadata.event.action)
+      // console.log(JSON.stringify(data))
       observer.next(data)
       // some fancy kafka stuff
       if (!Consumer.isConsumerAutoCommitEnabled(topicName)) {
@@ -121,11 +123,10 @@ const setup = async () => {
     )
 
   /*
-    Thirdparty Subscription Observer
+   * Thirdparty Subscription Observer
    */
   const thirdpartySubscriptionObservable = topicObservable.pipe(
     filter(data => data.value.metadata.event.action === 'subscription'),
-    // TODO: filter by subscribed! events only
     flatMap(Observables.Rules.thirdpartySubscribeObservable),
     flatMap(Observables.actionObservable),
     catchError(() => {
@@ -134,15 +135,18 @@ const setup = async () => {
   )
 
   /*
-    Thirdparty Notification Observer
+   * Thirdparty Notification Observer
    */
   const thirdpartyNotificationObservable = topicObservable.pipe(
     filter(data => data.value.metadata.event.action === 'commit'),
-    // TODO: filter by subscribed events only!
+    // filter(Observables.Rules.thirdpartyNotificationFilter),
+
+    // TODO: filters don't seem to like being async, so for now I placed all of the logic in the 
+    // single obserable
     flatMap(Observables.Rules.thirdpartyNotificationObservable),
+
+    // TODO: I think actionObservable is responsible for publishing new kafka messages
     flatMap(Observables.actionObservable),
-    // on success, remove the subscription!
-    flatMap(Observables.Rules.thirdpartyUnsubscribeObservable),
     catchError(() => {
       return Rx.onErrorResumeNext(generalObservable)
     })
@@ -150,10 +154,9 @@ const setup = async () => {
 
   // Subscribe all observables
   const allObservables = [
-    // TODO: renable these later
-    // generalObservable,
-    // limitAdjustmentObservable,
-    // settlementTransferPositionChangeObservable
+    generalObservable,
+    limitAdjustmentObservable,
+    settlementTransferPositionChangeObservable,
     thirdpartySubscriptionObservable,
     thirdpartyNotificationObservable,
   ]
@@ -167,7 +170,7 @@ const setup = async () => {
       }
       Logger.info(actionResult)
     },
-    error: err => Logger.info('Error occured: ', err),
+    error: err => Logger.error('Error occured: ', err),
     completed: (value) => Logger.info('completed with value', value)
   }))
 

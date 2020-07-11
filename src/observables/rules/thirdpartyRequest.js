@@ -23,6 +23,7 @@
  - Name Surname <name.surname@gatesfoundation.com>
 
  * ModusBox
+ - Georgi Georgiev <georgi.georgiev@modusbox.com>
  - Valentin Genev <valentin.genev@modusbox.com>
  - Deon Botha <deon.botha@modusbox.com>
 
@@ -30,8 +31,23 @@
  ******/
 'use strict'
 
-module.exports = {
-  thirdpartyRequestObservable: require('./thirdpartyRequest').thirdpartyRequestObservable,
-  ndcAdjustmentObservable: require('./ndcAdjustment').ndcAdjustmentObservable,
-  ndcBreachObservable: require('./ndcBreach').ndcBreachObservable
+const RuleEngine = require('json-rules-engine')
+const Rx = require('rxjs')
+
+/**
+ * @function thirdpartyRequestObservable
+ * @description An observable which handles incoming messages of type 
+ *   'commit', looks up interested parties, and emits thirdpartyTransfer
+ *   events
+ * @param {*} Object
+ * @param {any} Object.message  - The message object
+ * @returns {function} Observable - A Rx.Observable
+ */
+export function thirdpartyRequestObservable({message}) {
+  const handler = async observer => {
+    console.log('Handler is being called with message', message)
+  }
+
+  return Rx.Observable.create(handler)
 }
+

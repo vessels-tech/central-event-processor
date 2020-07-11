@@ -92,6 +92,7 @@ const actionBuilder = (action) => {
   }
 }
 
+//TODO What does this do??? do we need it?
 const actionObservable = ({ action, params, message }) => {
   return Rx.Observable.create(async observer => {
     try {

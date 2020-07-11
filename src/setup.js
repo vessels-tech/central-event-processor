@@ -64,15 +64,22 @@ const setup = async () => {
   await createHealthCheckServer(Config.get('PORT'), defaultHealthHandler(healthCheck))
 
   const topicObservable = Rx.Observable.create((observer) => {
+    // When kafka receives a message, push it into the topic observable
     consumer.on('message', async (data) => {
       observer.next(data)
+      // some fancy kafka stuff
       if (!Consumer.isConsumerAutoCommitEnabled(topicName)) {
         consumer.commitMessageSync(data)
       }
     })
   })
 
+  /*
+    General Observer
+      - net debit cap breach alert
+  */
   const generalObservable = topicObservable
+  // When we recieve a message, filter to make sure the event.action is `commit`
     .pipe(filter(data => data.value.metadata.event.action === 'commit'),
       flatMap(Observables.CentralLedgerAPI.getDfspNotificationEndpointsObservable),
       flatMap(Observables.CentralLedgerAPI.getPositionsObservable),
@@ -83,19 +90,36 @@ const setup = async () => {
       })
     )
 
-  generalObservable.subscribe({
-    next: async ({ actionResult, message }) => {
-      if (!actionResult) {
-        Logger.info(`action unsuccessful. Publishing the message to topic ${topicName}`)
-        // TODO consider should we change the state and produce error message instead of republish?
-        await Utility.produceGeneralMessage(TransferEventType.NOTIFICATION, TransferEventAction.EVENT, message, Utility.ENUMS.STATE.SUCCESS)
-      }
-      Logger.info(actionResult)
-    },
-    error: err => Logger.info('Error occured: ', err),
-    completed: (value) => Logger.info('completed with value', value)
-  })
+  // generalObservable.subscribe({
+  //   next: async ({ actionResult, message }) => {
+  //     if (!actionResult) {
+  //       Logger.info(`action unsuccessful. Publishing the message to topic ${topicName}`)
+  //       // TODO consider should we change the state and produce error message instead of republish?
+  //       await Utility.produceGeneralMessage(TransferEventType.NOTIFICATION, TransferEventAction.EVENT, message, Utility.ENUMS.STATE.SUCCESS)
+  //     }
+  //     Logger.info(actionResult)
+  //   },
+  //   error: err => Logger.info('Error occured: ', err),
+  //   completed: (value) => Logger.info('completed with value', value)
+  // })
 
+  /*
+    Thirdparty transfers Observer
+  */
+  //TODO: observable that listens to commits, and sends events to subscribes parties
+  const thirdpartyObservable = topicObservable.pipe(
+    filter(data => data.value.metadata.event.action === 'commit'),
+    flatMap(Observables.Rules.thirdpartyRequestObservable),
+    flatMap(Observables.actionObservable),
+    catchError(() => {
+      return Rx.onErrorResumeNext(generalObservable)
+    })
+  )
+
+
+  /*
+    Limit Adjustments Observer
+  */
   const limitAdjustmentObservable = topicObservable
     .pipe(filter(data => data.value.metadata.event.action === 'limit-adjustment' && 'limit' in data.value.content.payload),
       flatMap(Observables.CentralLedgerAPI.getDfspNotificationEndpointsForLimitObservable),
@@ -107,22 +131,26 @@ const setup = async () => {
       })
     )
 
-  limitAdjustmentObservable.subscribe({
-    next: async ({ actionResult, message }) => {
-      if (!actionResult) {
-        Logger.info(`action unsuccessful. Publishing the message to topic ${topicName}`)
-        await Utility.produceGeneralMessage(TransferEventType.NOTIFICATION, TransferEventAction.EVENT, message, Utility.ENUMS.STATE.SUCCESS)
-      }
-      Logger.info(actionResult)
-    },
-    error: err => Logger.info('Error occured: ', err),
-    completed: (value) => Logger.info('completed with value', value)
-  })
+  // limitAdjustmentObservable.subscribe({
+  //   next: async ({ actionResult, message }) => {
+  //     if (!actionResult) {
+  //       Logger.info(`action unsuccessful. Publishing the message to topic ${topicName}`)
+  //       await Utility.produceGeneralMessage(TransferEventType.NOTIFICATION, TransferEventAction.EVENT, message, Utility.ENUMS.STATE.SUCCESS)
+  //     }
+  //     Logger.info(actionResult)
+  //   },
+  //   error: err => Logger.info('Error occured: ', err),
+  //   completed: (value) => Logger.info('completed with value', value)
+  // })
 
+  /*
+    Settlement Position Change
+  */
   const settlementTransferPositionChangeObservable = topicObservable
     .pipe(filter(data => data.value.metadata.event.action === 'settlement-transfer-position-change'),
       flatMap(Observables.CentralLedgerAPI.getParticipantEndpointsFromResponseObservable),
       flatMap(Observables.actionObservable),
+      // TODO: why is this commented?
       // retry()
       catchError(e => {
         console.error(e)
@@ -130,9 +158,30 @@ const setup = async () => {
       })
     )
 
-  settlementTransferPositionChangeObservable.subscribe({
+  // settlementTransferPositionChangeObservable.subscribe({
+  //   // TODO: surely this subscribe dict can be generalized...
+  //   next: async ({ actionResult, message }) => {
+  //     if (!actionResult) {
+  //       Logger.info(`action unsuccessful. Publishing the message to topic ${topicName}`)
+  //       // TODO we should change the state and produce error message instead of republish?
+  //       await Utility.produceGeneralMessage(TransferEventType.NOTIFICATION, TransferEventAction.EVENT, message, Utility.ENUMS.STATE.SUCCESS)
+  //     }
+  //     Logger.info(actionResult)
+  //   },
+  //   error: err => Logger.info('Error occured: ', err),
+  //   completed: (value) => Logger.info('completed with value', value)
+  // })
+
+  // Subscribe all observables
+  const allObservables = [
+    generalObservable,
+    thirdpartyObservable,
+    limitAdjustmentObservable,
+    settlementTransferPositionChangeObservable
+  ]
+  allObservables.forEach(observable => observable.subscribe({
+    // TODO: surely this subscribe dict can be generalized...
     next: async ({ actionResult, message }) => {
-      Logger.info('WE ARE IN')
       if (!actionResult) {
         Logger.info(`action unsuccessful. Publishing the message to topic ${topicName}`)
         // TODO we should change the state and produce error message instead of republish?
@@ -142,7 +191,8 @@ const setup = async () => {
     },
     error: err => Logger.info('Error occured: ', err),
     completed: (value) => Logger.info('completed with value', value)
-  })
+  }))
+
 }
 
 module.exports = {

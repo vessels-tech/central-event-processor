@@ -31,6 +31,7 @@
 
 const RuleEngine = require('json-rules-engine')
 const Rx = require('rxjs')
+const TransferSubscriptionModel = require('../../models/transferSubscription');
 
 /**
  * @function thirdpartySubscribeObservable
@@ -41,9 +42,15 @@ const Rx = require('rxjs')
  */
 function thirdpartySubscribeObservable(message) {
   const handler = async observer => {
-    console.log('Handler is being called with message', message)
+    console.log('thirdpartySubscribeObservable with message', message)
 
-    //TODO: emit a thirdparty-request-message
+    //TODO: get the details from the message, for now this will do
+    const subscriptionObject = {
+      transferId: '12345',
+      participantId: 'pispa',
+    }
+    const document = await transferSubscriptionModel.create(subscriptionObject)
+    return document.toObject();
   }
 
   return Rx.Observable.create(handler)
@@ -57,9 +64,13 @@ function thirdpartySubscribeObservable(message) {
  */
 function thirdpartyUnsubscribeObservable(message) {
   const handler = async observer => {
-    console.log('Handler is being called with message', message)
+    console.log('thirdpartyUnsubscribeObservable with message', message)
 
-    //TODO: emit a thirdparty-request-message
+    //TODO: get the details from the message, for now this will do
+    const tranferId = '12345';
+  
+    await transferSubscriptionModel.deleteOne({transferId})
+    return
   }
 
   return Rx.Observable.create(handler)

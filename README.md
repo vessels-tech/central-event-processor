@@ -200,13 +200,11 @@ For more information on anchore and anchore-cli, refer to:
 
 
 
+## PISP Thirdparty Notification Example
 
+### Notification Sequence Diagram:
 
-## PISP Testing
-
-notes:
-- this means that the ml-api-adapter must send the commit message on `topic-notification-event`... is that right?
-
+![](./docs/sequenceDiagrams/seq-cep-10.6-thirdparty-notifications-flow.svg)
 
 
 ```bash
@@ -251,3 +249,4 @@ observe the following in `topic-notification-thirdparty-transfer`:
 {"metadata":{"event":{"id":"c5670ab9-29d9-4318-a04c-4807f6595f9e","type":"notification","action":"thirdparty-transfer","state":{}},"protocol.createdAt":1594465032285}}
 % Reached end of topic topic-notification-thirdparty-transfer [0] at offset 2
 ```
+
